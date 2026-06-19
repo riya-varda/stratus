@@ -1,0 +1,245 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stratus
+
+---
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stratus-config
+  namespace: stratus
+data:
+  ENVIRONMENT: production
+  DEBUG: "false"
+  APP_NAME: Stratus
+  APP_VERSION: "1.0.0"
+  ALLOWED_ORIGINS: '["https://app.stratus.dev"]'
+
+---
+# Secret (base64 encoded in real deployment)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: stratus-secrets
+  namespace: stratus
+type: Opaque
+stringData:
+  SECRET_KEY: "CHANGE_ME_IN_PRODUCTION"
+  DATABASE_URL: "postgresql+asyncpg://stratus:stratus@postgres:5432/stratus"
+  REDIS_URL: "redis://redis:6379/0"
+  CELERY_BROKER_URL: "redis://redis:6379/1"
+  CELERY_RESULT_BACKEND: "redis://redis:6379/2"
+
+---
+# API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stratus-api
+  namespace: stratus
+  labels:
+    app: stratus-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stratus-api
+  template:
+    metadata:
+      labels:
+        app: stratus-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: api
+          image: stratus/api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: stratus-config
+            - secretRef:
+                name: stratus-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/live
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/v1/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+---
+# API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: stratus-api
+  namespace: stratus
+spec:
+  selector:
+    app: stratus-api
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP
+
+---
+# API HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: stratus-api-hpa
+  namespace: stratus
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: stratus-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+# Celery Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stratus-worker
+  namespace: stratus
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stratus-worker
+  template:
+    metadata:
+      labels:
+        app: stratus-worker
+    spec:
+      containers:
+        - name: worker
+          image: stratus/api:latest
+          command: ["celery", "-A", "app.tasks.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
+          envFrom:
+            - configMapRef:
+                name: stratus-config
+            - secretRef:
+                name: stratus-secrets
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stratus-frontend
+  namespace: stratus
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stratus-frontend
+  template:
+    metadata:
+      labels:
+        app: stratus-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: stratus/frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+
+---
+# Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: stratus-frontend
+  namespace: stratus
+spec:
+  selector:
+    app: stratus-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stratus-ingress
+  namespace: stratus
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  tls:
+    - hosts:
+        - app.stratus.dev
+      secretName: stratus-tls
+  rules:
+    - host: app.stratus.dev
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: stratus-api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stratus-frontend
+                port:
+                  number: 80
