@@ -123,7 +123,7 @@ export default function ProjectDetailPage() {
         />
       ) : (
         <div className="space-y-2">
-          {deployments?.items.map((d) => <DeploymentRow key={d.id} deployment={d} projectId={id} onCancel={() => cancelMutation.mutate({ projectId: id, deploymentId: d.id })} />)}
+          {deployments?.items.map((d) => <DeploymentRow key={d.id} deployment={d} onCancel={() => cancelMutation.mutate({ projectId: id, deploymentId: d.id })} />)}
         </div>
       )}
 
@@ -157,8 +157,8 @@ export default function ProjectDetailPage() {
   )
 }
 
-function DeploymentRow({ deployment: d, projectId, onCancel }: {
-  deployment: Deployment; projectId: string; onCancel: () => void
+function DeploymentRow({ deployment: d, onCancel }: {
+  deployment: Deployment; onCancel: () => void
 }) {
   const canCancel = d.status === 'pending' || d.status === 'building'
 
@@ -199,3 +199,5 @@ function DeploymentRow({ deployment: d, projectId, onCancel }: {
     </motion.div>
   )
 }
+
+

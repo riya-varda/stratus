@@ -1,13 +1,13 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
 
 from app.core.dependencies import get_current_active_user, get_pagination_params
 from app.db.session import get_db
 from app.models.models import User
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse, ProjectListResponse
 from app.schemas.common import MessageResponse
+from app.schemas.project import ProjectCreate, ProjectListResponse, ProjectResponse, ProjectUpdate
 from app.services.project_service import ProjectService
 
 router = APIRouter()
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.get("/", response_model=ProjectListResponse)
 async def list_projects(
     pagination: dict = Depends(get_pagination_params),
-    status: Optional[str] = Query(None),
+    status: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):

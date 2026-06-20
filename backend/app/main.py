@@ -6,13 +6,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-
-from app.core.config import settings
-from app.db.session import init_db, close_db
-from app.db.redis import close_redis
-from app.api.v1.router import api_router
-from app.middleware.logging import LoggingMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
+
+from app.api.v1.router import api_router
+from app.core.config import settings
+from app.db.redis import close_redis
+from app.db.session import close_db, init_db
+from app.middleware.logging import LoggingMiddleware
 
 LOGGING_CONFIG = {
     "version": 1,
@@ -87,5 +87,3 @@ async def root():
         "version": settings.APP_VERSION,
         "docs": "/docs",
     }
-
-

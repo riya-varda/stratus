@@ -1,13 +1,12 @@
 import uuid
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_active_user, get_pagination_params
 from app.db.session import get_db
-from app.models.models import User, DeploymentStatus
-from app.schemas.deployment import DeploymentCreate, DeploymentResponse, DeploymentListResponse
-from app.schemas.common import MessageResponse
+from app.models.models import DeploymentStatus, User
+from app.schemas.deployment import DeploymentCreate, DeploymentListResponse, DeploymentResponse
 from app.services.deployment_service import DeploymentService
 from app.services.project_service import ProjectService
 
@@ -26,8 +25,8 @@ async def get_project_or_404(project_id: uuid.UUID, current_user: User, db: Asyn
 async def list_deployments(
     project_id: uuid.UUID,
     pagination: dict = Depends(get_pagination_params),
-    environment: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    environment: str | None = Query(None),
+    status: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -87,7 +86,9 @@ async def get_deployment(
     return deployment
 
 
-@router.post("/projects/{project_id}/deployments/{deployment_id}/cancel", response_model=DeploymentResponse)
+@router.post(
+    "/projects/{project_id}/deployments/{deployment_id}/cancel", response_model=DeploymentResponse
+)
 async def cancel_deployment(
     project_id: uuid.UUID,
     deployment_id: uuid.UUID,

@@ -1,16 +1,17 @@
-import uuid
 import re
+import uuid
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 
 
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    repository_url: Optional[str] = None
-    framework: Optional[str] = None
-    settings: Optional[Dict[str, Any]] = None
+    description: str | None = None
+    repository_url: str | None = None
+    framework: str | None = None
+    settings: dict[str, Any] | None = None
 
     @field_validator("name")
     @classmethod
@@ -23,12 +24,12 @@ class ProjectCreate(BaseModel):
 
 
 class ProjectUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    repository_url: Optional[str] = None
-    framework: Optional[str] = None
-    settings: Optional[Dict[str, Any]] = None
-    status: Optional[str] = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    repository_url: str | None = None
+    framework: str | None = None
+    settings: dict[str, Any] | None = None
+    status: str | None = None
 
 
 class ProjectResponse(BaseModel):
@@ -36,13 +37,13 @@ class ProjectResponse(BaseModel):
     owner_id: uuid.UUID
     name: str
     slug: str
-    description: Optional[str]
+    description: str | None
     status: str
-    repository_url: Optional[str]
-    framework: Optional[str]
-    settings: Optional[Dict[str, Any]]
-    deployment_count: Optional[int] = 0
-    last_deployed_at: Optional[datetime] = None
+    repository_url: str | None
+    framework: str | None
+    settings: dict[str, Any] | None
+    deployment_count: int | None = 0
+    last_deployed_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -92,7 +92,7 @@ export const projectsApi = {
     repository_url?: string
     framework?: string
   }) => apiClient.post('/projects/', data),
-  update: (id: string, data: Partial<{ name: string; description: string; status: string }>) =>
+  update: (id: string, data: Partial<{ name: string; description: string | null; status: string }>) =>
     apiClient.patch(`/projects/${id}`, data),
   delete: (id: string) => apiClient.delete(`/projects/${id}`),
 }
@@ -134,3 +134,6 @@ export const analyticsApi = {
 export const healthApi = {
   check: () => apiClient.get('/health'),
 }
+
+
+

@@ -1,11 +1,11 @@
 import logging
 import smtplib
-from email.mime.text import MIMEText
+from datetime import UTC, datetime
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timezone, timedelta
+from email.mime.text import MIMEText
 
-from app.tasks.celery_app import celery_app
 from app.core.config import settings
+from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def send_email_task(self, to_email: str, subject: str, html_body: str):
     try:
-        if not settings.SMTP_USER:
+        if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
             logger.info(f"Email (not configured): to={to_email} subject={subject}")
             return {"status": "skipped", "reason": "SMTP not configured"}
 
@@ -32,7 +32,7 @@ def send_email_task(self, to_email: str, subject: str, html_body: str):
         return {"status": "sent", "to": to_email}
     except Exception as exc:
         logger.error(f"Failed to send email to {to_email}: {exc}")
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(bind=True, max_retries=3)
@@ -60,14 +60,15 @@ def cleanup_old_deployment_logs():
     """Remove build logs older than 30 days to save storage."""
     logger.info("Running scheduled cleanup of old deployment logs")
     # In a real app, you'd connect to DB here and clear old logs
-    return {"status": "completed", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "completed", "timestamp": datetime.now(UTC).isoformat()}
 
 
 @celery_app.task(bind=True, max_retries=5, default_retry_delay=30)
 def process_deployment(self, deployment_id: str, project_id: str):
     """Simulate deployment processing."""
-    import time
     import random
+    import time
+
     try:
         logger.info(f"Processing deployment {deployment_id}")
         time.sleep(random.uniform(5, 15))  # simulate build
@@ -78,4 +79,5 @@ def process_deployment(self, deployment_id: str, project_id: str):
             "duration_seconds": random.randint(30, 300),
         }
     except Exception as exc:
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
+

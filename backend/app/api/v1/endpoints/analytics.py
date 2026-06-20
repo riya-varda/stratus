@@ -1,11 +1,12 @@
+from datetime import UTC, datetime, timedelta
+
 from fastapi import APIRouter, Depends
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
-from datetime import datetime, timezone, timedelta
 
 from app.core.dependencies import get_current_active_user
 from app.db.session import get_db
-from app.models.models import User, Project, Deployment, DeploymentStatus, ProjectStatus
+from app.models.models import Deployment, DeploymentStatus, Project, ProjectStatus, User
 
 router = APIRouter()
 
@@ -15,7 +16,7 @@ async def get_overview(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     thirty_days_ago = now - timedelta(days=30)
 
     # Project stats
@@ -28,9 +29,7 @@ async def get_overview(
 
     # Deployment stats
     total_deployments = await db.execute(
-        select(func.count(Deployment.id))
-        .join(Project)
-        .where(Project.owner_id == current_user.id)
+        select(func.count(Deployment.id)).join(Project).where(Project.owner_id == current_user.id)
     )
 
     success_deployments = await db.execute(
@@ -76,10 +75,12 @@ async def get_overview(
                 Deployment.created_at < day_end,
             )
         )
-        trend.append({
-            "date": day_start.strftime("%Y-%m-%d"),
-            "deployments": count.scalar_one(),
-        })
+        trend.append(
+            {
+                "date": day_start.strftime("%Y-%m-%d"),
+                "deployments": count.scalar_one(),
+            }
+        )
 
     total_deps = total_deployments.scalar_one()
     success_deps = success_deployments.scalar_one()
@@ -104,7 +105,9 @@ async def get_overview(
                 "environment": a.Deployment.environment,
                 "branch": a.Deployment.branch,
                 "commit_message": a.Deployment.commit_message,
-                "created_at": a.Deployment.created_at.isoformat() if a.Deployment.created_at else None,
+                "created_at": (
+                    a.Deployment.created_at.isoformat() if a.Deployment.created_at else None
+                ),
             }
             for a in activities
         ],

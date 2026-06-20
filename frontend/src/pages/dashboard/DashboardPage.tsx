@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 import { Rocket, FolderOpen, CheckCircle, TrendingUp, ArrowUpRight, Clock } from 'lucide-react'
-import { Card, Skeleton, StatusBadge, EnvBadge } from '@/components/ui/index'
+import { Card, Skeleton, StatusBadge } from '@/components/ui/index'
 import { useAnalyticsOverview } from '@/hooks/useApi'
 import { useAuthStore } from '@/store/authStore'
 import { formatRelative, truncate } from '@/lib/utils'
@@ -159,3 +159,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+

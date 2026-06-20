@@ -1,13 +1,13 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class UserBase(BaseModel):
     email: EmailStr
     username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
-    full_name: Optional[str] = None
+    full_name: str | None = None
 
 
 class UserCreate(UserBase):
@@ -24,22 +24,22 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
+    full_name: str | None = None
+    bio: str | None = None
+    avatar_url: str | None = None
 
 
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     username: str
-    full_name: Optional[str]
+    full_name: str | None
     role: str
     is_active: bool
     is_verified: bool
-    avatar_url: Optional[str]
-    bio: Optional[str]
-    last_login_at: Optional[datetime]
+    avatar_url: str | None
+    bio: str | None
+    last_login_at: datetime | None
     created_at: datetime
     updated_at: datetime
 
@@ -49,8 +49,8 @@ class UserResponse(BaseModel):
 class UserPublic(BaseModel):
     id: uuid.UUID
     username: str
-    full_name: Optional[str]
-    avatar_url: Optional[str]
+    full_name: str | None
+    avatar_url: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -79,8 +79,8 @@ class APIKeyResponse(BaseModel):
     name: str
     key_prefix: str
     is_active: bool
-    last_used_at: Optional[datetime]
-    expires_at: Optional[datetime]
+    last_used_at: datetime | None
+    expires_at: datetime | None
     created_at: datetime
 
     model_config = {"from_attributes": True}

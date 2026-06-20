@@ -1,6 +1,7 @@
-from locust import HttpUser, task, between
 import random
 import string
+
+from locust import HttpUser, between, task
 
 
 def random_string(n=8):
@@ -14,15 +15,21 @@ class StratusUser(HttpUser):
     def on_start(self):
         username = random_string()
         email = f"{username}@loadtest.com"
-        self.client.post("/api/v1/auth/register", json={
-            "email": email,
-            "username": username,
-            "password": "LoadTest1",
-        })
-        response = self.client.post("/api/v1/auth/login", json={
-            "email": email,
-            "password": "LoadTest1",
-        })
+        self.client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": email,
+                "username": username,
+                "password": "LoadTest1",
+            },
+        )
+        response = self.client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": email,
+                "password": "LoadTest1",
+            },
+        )
         if response.status_code == 200:
             self.token = response.json().get("access_token")
 

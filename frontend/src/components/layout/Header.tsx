@@ -1,4 +1,4 @@
-import { Moon, Sun, Bell, Search } from 'lucide-react'
+import { Moon, Sun, Bell } from 'lucide-react'
 import { useUIStore } from '@/store/uiStore'
 import { useAuthStore } from '@/store/authStore'
 
@@ -33,3 +33,4 @@ export function Header({ title }: HeaderProps) {
     </header>
   )
 }
+

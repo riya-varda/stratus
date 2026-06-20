@@ -1,14 +1,14 @@
-import uuid
+import logging
 import math
 import re
-import logging
-from typing import Optional, Dict, Any, List
+import uuid
+from typing import Any
 
-from sqlalchemy import select, func, or_, desc, asc
+from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.redis import cache_get, cache_set, cache_delete, cache_delete_pattern
-from app.models.models import Project, Deployment, ProjectStatus
+from app.db.redis import cache_delete, cache_delete_pattern, cache_get, cache_set
+from app.models.models import Deployment, Project, ProjectStatus
 from app.schemas.project import ProjectCreate, ProjectUpdate
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class ProjectService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_by_id(self, project_id: uuid.UUID, owner_id: uuid.UUID) -> Optional[Project]:
+    async def get_by_id(self, project_id: uuid.UUID, owner_id: uuid.UUID) -> Project | None:
         result = await self.db.execute(
             select(Project).where(Project.id == project_id, Project.owner_id == owner_id)
         )
@@ -74,12 +74,14 @@ class ProjectService:
         owner_id: uuid.UUID,
         page: int = 1,
         page_size: int = 20,
-        search: Optional[str] = None,
+        search: str | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
-        status: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        cache_key = f"projects:{owner_id}:{page}:{page_size}:{search}:{sort_by}:{sort_order}:{status}"
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        cache_key = (
+            f"projects:{owner_id}:{page}:{page_size}:{search}:{sort_by}:{sort_order}:{status}"
+        )
         cached = await cache_get(cache_key)
         if cached:
             return cached

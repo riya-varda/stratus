@@ -1,23 +1,24 @@
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel
 
 
 class MessageResponse(BaseModel):
     message: str
-    detail: Optional[Any] = None
+    detail: Any | None = None
 
 
 class ErrorResponse(BaseModel):
     error: str
-    detail: Optional[Any] = None
-    code: Optional[str] = None
+    detail: Any | None = None
+    code: str | None = None
 
 
 class PaginationParams(BaseModel):
     page: int = 1
     page_size: int = 20
-    search: Optional[str] = None
-    sort_by: Optional[str] = None
+    search: str | None = None
+    sort_by: str | None = None
     sort_order: str = "desc"
 
 

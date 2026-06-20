@@ -1,15 +1,14 @@
-from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import create_access_token, create_refresh_token, verify_token
 from app.core.dependencies import get_current_active_user
+from app.core.security import create_access_token, create_refresh_token, verify_token
 from app.db.session import get_db
 from app.models.models import User
-from app.schemas.auth import LoginRequest, TokenResponse, RefreshTokenRequest, VerifyEmailRequest
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.auth import LoginRequest, RefreshTokenRequest, TokenResponse, VerifyEmailRequest
 from app.schemas.common import MessageResponse
+from app.schemas.user import UserCreate, UserResponse
 from app.services.user_service import UserService
 
 router = APIRouter()
@@ -22,7 +21,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
         user = await service.create(user_in)
         return user
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -47,10 +46,12 @@ async def login(login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     payload = verify_token(data.refresh_token)
     if not payload or payload.get("type") != "refresh":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
 
     user_id = payload.get("sub")
-    result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
+    result = await db.execute(select(User).where(User.id == user_id, User.is_active))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
@@ -66,7 +67,9 @@ async def verify_email(data: VerifyEmailRequest, db: AsyncSession = Depends(get_
     service = UserService(db)
     user = await service.verify_email(data.token)
     if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token"
+        )
     return MessageResponse(message="Email verified successfully")
 
 

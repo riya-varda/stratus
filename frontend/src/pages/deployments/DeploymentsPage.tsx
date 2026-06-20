@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Rocket, GitBranch, Search, Filter } from 'lucide-react'
+import { Rocket, GitBranch, Search } from 'lucide-react'
 import { Card, Skeleton, EmptyState, StatusBadge, EnvBadge, Select } from '@/components/ui/index'
 import { useProjects, useDeployments } from '@/hooks/useApi'
 import { formatRelative, formatDuration } from '@/lib/utils'
@@ -146,3 +146,4 @@ export default function DeploymentsPage() {
     </div>
   )
 }
+

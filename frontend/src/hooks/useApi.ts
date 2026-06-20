@@ -2,7 +2,6 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  type UseQueryOptions,
 } from '@tanstack/react-query'
 import {
   authApi,
@@ -80,7 +79,7 @@ export function useDeleteProject() {
 // Deployments
 export function useDeployments(
   projectId: string,
-  params?: { page?: number; environment?: string; status?: string }
+  params?: { page?: number; page_size?: number; environment?: string; status?: string }
 ) {
   return useQuery({
     queryKey: ['deployments', projectId, params],
@@ -185,3 +184,5 @@ export function useDeleteApiKey() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['api-keys'] }),
   })
 }
+
+

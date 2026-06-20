@@ -1,21 +1,31 @@
 import uuid
-from datetime import datetime
 from enum import Enum as PyEnum
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-    String, Text, UniqueConstraint, func, JSON
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
 )
-from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import CHAR, TypeDecorator
 
 from app.db.session import Base
+
 
 class GUID(TypeDecorator):
     """Platform-independent GUID type.
     Uses PostgreSQL's native UUID type, otherwise stores as CHAR(32) string.
     """
+
     impl = CHAR
     cache_ok = True
 
@@ -86,7 +96,9 @@ class User(Base):
     reset_password_expires = Column(DateTime(timezone=True), nullable=True)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     projects = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
@@ -122,7 +134,9 @@ class Project(Base):
     framework = Column(String(100), nullable=True)
     settings = Column(JSON, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     __table_args__ = (UniqueConstraint("owner_id", "slug", name="uq_project_owner_slug"),)
 
@@ -149,11 +163,9 @@ class Deployment(Base):
     started_at = Column(DateTime(timezone=True), nullable=True)
     finished_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     project = relationship("Project", back_populates="deployments")
     created_by = relationship("User", back_populates="deployments")
-
-
-
-

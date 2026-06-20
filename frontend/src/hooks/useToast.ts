@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 
 interface Toast {
   id: string
@@ -38,3 +38,4 @@ export function useToasts() {
 
   return state
 }
+

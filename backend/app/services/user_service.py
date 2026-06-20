@@ -1,18 +1,21 @@
-import uuid
 import logging
-from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+import uuid
+from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import (
-    get_password_hash, verify_password,
-    generate_api_key, hash_api_key, generate_verification_token
+    generate_api_key,
+    generate_verification_token,
+    get_password_hash,
+    hash_api_key,
+    verify_password,
 )
-from app.db.redis import cache_get, cache_set, cache_delete
-from app.models.models import User, APIKey, UserRole
-from app.schemas.user import UserCreate, UserUpdate, APIKeyCreate
+from app.db.redis import cache_delete, cache_get
+from app.models.models import APIKey, User, UserRole
+from app.schemas.user import APIKeyCreate, UserCreate, UserUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +24,7 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_by_id(self, user_id: uuid.UUID) -> Optional[User]:
+    async def get_by_id(self, user_id: uuid.UUID) -> User | None:
         cache_key = f"user:{user_id}"
         cached = await cache_get(cache_key)
         if cached:
@@ -30,11 +33,11 @@ class UserService:
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
-    async def get_by_username(self, username: str) -> Optional[User]:
+    async def get_by_username(self, username: str) -> User | None:
         result = await self.db.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
 
@@ -61,13 +64,13 @@ class UserService:
         await self.db.refresh(user)
         return user
 
-    async def authenticate(self, email: str, password: str) -> Optional[User]:
+    async def authenticate(self, email: str, password: str) -> User | None:
         user = await self.get_by_email(email)
         if not user:
             return None
         if not verify_password(password, user.hashed_password):
             return None
-        user.last_login_at = datetime.now(timezone.utc)
+        user.last_login_at = datetime.now(UTC)
         await self.db.flush()
         return user
 
@@ -87,10 +90,8 @@ class UserService:
         await self.db.flush()
         return True
 
-    async def verify_email(self, token: str) -> Optional[User]:
-        result = await self.db.execute(
-            select(User).where(User.verification_token == token)
-        )
+    async def verify_email(self, token: str) -> User | None:
+        result = await self.db.execute(select(User).where(User.verification_token == token))
         user = result.scalar_one_or_none()
         if user:
             user.is_verified = True
@@ -112,9 +113,7 @@ class UserService:
         return api_key, raw_key
 
     async def list_api_keys(self, user: User) -> list[APIKey]:
-        result = await self.db.execute(
-            select(APIKey).where(APIKey.user_id == user.id)
-        )
+        result = await self.db.execute(select(APIKey).where(APIKey.user_id == user.id))
         return list(result.scalars().all())
 
     async def delete_api_key(self, user: User, key_id: uuid.UUID) -> bool:
@@ -127,9 +126,9 @@ class UserService:
         await self.db.delete(api_key)
         return True
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         total = await self.db.execute(select(func.count(User.id)))
-        active = await self.db.execute(select(func.count(User.id)).where(User.is_active == True))
+        active = await self.db.execute(select(func.count(User.id)).where(User.is_active))
         return {
             "total_users": total.scalar_one(),
             "active_users": active.scalar_one(),

@@ -1,11 +1,12 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.db.session import get_db
 from app.db.redis import get_redis
+from app.db.session import get_db
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         "environment": settings.ENVIRONMENT,
         "database": db_status,
         "redis": redis_status,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -44,9 +45,10 @@ async def readiness_check(db: AsyncSession = Depends(get_db)):
         return {"status": "ready"}
     except Exception:
         from fastapi import HTTPException
-        raise HTTPException(status_code=503, detail="Not ready")
+
+        raise HTTPException(status_code=503, detail="Not ready") from None
 
 
 @router.get("/live")
 async def liveness_check():
-    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "alive", "timestamp": datetime.now(UTC).isoformat()}

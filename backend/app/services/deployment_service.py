@@ -1,15 +1,15 @@
-import uuid
-import math
 import logging
-from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+import math
+import uuid
+from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import select, func, or_, desc, asc
+from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.redis import cache_delete_pattern
-from app.models.models import Deployment, DeploymentStatus, Project
-from app.schemas.deployment import DeploymentCreate, DeploymentUpdate
+from app.models.models import Deployment, DeploymentStatus
+from app.schemas.deployment import DeploymentCreate
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class DeploymentService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_by_id(self, deployment_id: uuid.UUID, project_id: uuid.UUID) -> Optional[Deployment]:
+    async def get_by_id(self, deployment_id: uuid.UUID, project_id: uuid.UUID) -> Deployment | None:
         result = await self.db.execute(
             select(Deployment).where(
                 Deployment.id == deployment_id,
@@ -39,7 +39,7 @@ class DeploymentService:
             branch=deployment_in.branch or "main",
             deployment_metadata=deployment_in.metadata or {},
             status=DeploymentStatus.pending,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
         )
         self.db.add(deployment)
         await self.db.flush()
@@ -54,8 +54,12 @@ class DeploymentService:
         for key, value in kwargs.items():
             if hasattr(deployment, key):
                 setattr(deployment, key, value)
-        if status in (DeploymentStatus.success, DeploymentStatus.failed, DeploymentStatus.cancelled):
-            deployment.finished_at = datetime.now(timezone.utc)
+        if status in (
+            DeploymentStatus.success,
+            DeploymentStatus.failed,
+            DeploymentStatus.cancelled,
+        ):
+            deployment.finished_at = datetime.now(UTC)
             if deployment.started_at:
                 delta = deployment.finished_at - deployment.started_at
                 deployment.build_duration_seconds = int(delta.total_seconds())
@@ -69,12 +73,12 @@ class DeploymentService:
         project_id: uuid.UUID,
         page: int = 1,
         page_size: int = 20,
-        search: Optional[str] = None,
+        search: str | None = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
-        environment: Optional[str] = None,
-        status: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        environment: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         query = select(Deployment).where(Deployment.project_id == project_id)
 
         if search:
@@ -115,12 +119,16 @@ class DeploymentService:
             "pages": math.ceil(total / page_size) if total else 0,
         }
 
-    async def get_stats(self, project_id: uuid.UUID) -> Dict[str, Any]:
+    async def get_stats(self, project_id: uuid.UUID) -> dict[str, Any]:
         result = await self.db.execute(
             select(
                 func.count(Deployment.id).label("total"),
-                func.count(Deployment.id).filter(Deployment.status == DeploymentStatus.success).label("success"),
-                func.count(Deployment.id).filter(Deployment.status == DeploymentStatus.failed).label("failed"),
+                func.count(Deployment.id)
+                .filter(Deployment.status == DeploymentStatus.success)
+                .label("success"),
+                func.count(Deployment.id)
+                .filter(Deployment.status == DeploymentStatus.failed)
+                .label("failed"),
                 func.avg(Deployment.build_duration_seconds).label("avg_duration"),
             ).where(Deployment.project_id == project_id)
         )

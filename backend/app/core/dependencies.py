@@ -1,18 +1,17 @@
-from typing import Optional
 from fastapi import Depends, HTTPException, Query, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import verify_token, hash_api_key
+from app.core.security import hash_api_key, verify_token
 from app.db.session import get_db
-from app.models.models import User, APIKey, UserRole
+from app.models.models import APIKey, User, UserRole
 
 security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     credentials_exception = HTTPException(
@@ -30,7 +29,7 @@ async def get_current_user(
     if token.startswith("sk_"):
         key_hash = hash_api_key(token)
         result = await db.execute(
-            select(APIKey).where(APIKey.key_hash == key_hash, APIKey.is_active == True)
+            select(APIKey).where(APIKey.key_hash == key_hash, APIKey.is_active)
         )
         api_key = result.scalar_one_or_none()
         if not api_key:
@@ -73,14 +72,15 @@ def require_role(*roles: UserRole):
                 detail="Insufficient permissions",
             )
         return current_user
+
     return role_checker
 
 
 def get_pagination_params(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    search: Optional[str] = Query(None),
-    sort_by: Optional[str] = Query(None),
+    search: str | None = Query(None),
+    sort_by: str | None = Query(None),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
 ):
     return {

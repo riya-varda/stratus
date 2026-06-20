@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Optional
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,19 +33,19 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     # Email
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
     EMAILS_FROM_EMAIL: str = "noreply@stratus.dev"
     EMAILS_FROM_NAME: str = "Stratus"
 
     # AWS
-    AWS_ACCESS_KEY_ID: Optional[str] = None
-    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
     AWS_REGION: str = "us-east-1"
     S3_BUCKET_NAME: str = "stratus-assets"
 
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     MAX_PAGE_SIZE: int = 100
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     return Settings()
 

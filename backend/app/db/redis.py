@@ -1,7 +1,6 @@
 import json
 import logging
-from typing import Any, Optional
-from functools import wraps
+from typing import Any
 
 import redis.asyncio as redis
 
@@ -9,10 +8,10 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_redis_client: Optional[redis.Redis] = None
+_redis_client: redis.Redis | None = None
 
 
-async def get_redis() -> Optional[redis.Redis]:
+async def get_redis() -> redis.Redis | None:
     global _redis_client
     if _redis_client is None:
         try:
@@ -24,7 +23,7 @@ async def get_redis() -> Optional[redis.Redis]:
     return _redis_client
 
 
-async def cache_get(key: str) -> Optional[Any]:
+async def cache_get(key: str) -> Any | None:
     client = await get_redis()
     if not client:
         return None

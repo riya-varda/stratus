@@ -10,7 +10,6 @@ import {
   LogOut,
   Cloud,
   BarChart3,
-  Key,
   User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -159,3 +158,5 @@ export function Sidebar() {
     </motion.aside>
   )
 }
+
+
