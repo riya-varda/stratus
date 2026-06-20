@@ -80,4 +80,3 @@ def process_deployment(self, deployment_id: str, project_id: str):
         }
     except Exception as exc:
         raise self.retry(exc=exc) from exc
-
