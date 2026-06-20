@@ -59,3 +59,4 @@ secrets/
 # Database
 *.db
 *.sqlite3
+backend/celerybeat-schedule
