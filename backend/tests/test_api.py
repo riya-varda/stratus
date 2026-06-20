@@ -160,4 +160,3 @@ class TestHealth:
     async def test_live(self, client):
         response = await client.get("/api/v1/live")
         assert response.status_code == 200
-
