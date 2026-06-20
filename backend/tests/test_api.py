@@ -21,6 +21,7 @@ async def setup_db():
     yield
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    await engine.dispose()
 
 
 @pytest_asyncio.fixture
@@ -159,3 +160,4 @@ class TestHealth:
     async def test_live(self, client):
         response = await client.get("/api/v1/live")
         assert response.status_code == 200
+

@@ -15,6 +15,7 @@ jobs:
   backend-lint:
     name: Backend Lint & Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         working-directory: backend
@@ -43,6 +44,7 @@ jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         working-directory: backend
@@ -96,6 +98,7 @@ jobs:
   validate-migrations:
     name: Validate Migrations
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         working-directory: backend
@@ -141,6 +144,7 @@ jobs:
   frontend-lint:
     name: Frontend Lint & Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         working-directory: frontend
@@ -164,6 +168,7 @@ jobs:
   frontend-build:
     name: Frontend Build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         working-directory: frontend
@@ -194,6 +199,7 @@ jobs:
   docker:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [backend-test, frontend-build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
@@ -232,6 +238,8 @@ jobs:
             riya2908/frontend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+
 
 
 
