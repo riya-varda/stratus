@@ -64,15 +64,15 @@ Stratus is a full-stack platform for managing cloud projects and deployments. It
 <td valign="top">
 
 **Infrastructure**
-- Docker Compose
-- Kubernetes
-- Terraform (AWS)
+- Docker Compose (verified, runs full stack)
+- Kubernetes manifests (included, not yet deployed)
+- Terraform / AWS (included, not yet provisioned)
 
 </td>
 <td valign="top">
 
 **CI/CD & Monitoring**
-- GitHub Actions
+- GitHub Actions (6-stage pipeline, fully green)
 - Prometheus + Grafana
 - postgres_exporter / redis_exporter
 
@@ -184,39 +184,41 @@ Every push to `main` runs a 6-stage GitHub Actions workflow:
 
 ## Deployment
 
+The application runs locally via Docker Compose (see Quick Start above). Infrastructure-as-code for cloud deployment is included in the repo but has not yet been provisioned against a live cloud environment:
+
 <details>
-<summary><strong>Docker</strong></summary>
+<summary><strong>Docker (verified)</strong></summary>
 
 ```bash
-docker compose up                                              # dev, hot reload
-docker build -t stratus-api --target production ./backend       # backend only
-docker build -t stratus-frontend --target production ./frontend # frontend only
+docker compose up                                                # dev, hot reload
+docker build -t stratus-api --target production ./backend        # backend only
+docker build -t stratus-frontend --target production ./frontend  # frontend only
 ```
 
 </details>
 
 <details>
-<summary><strong>Kubernetes</strong></summary>
+<summary><strong>Kubernetes (manifests included, not yet deployed)</strong></summary>
+
+Manifests for a Kubernetes deployment are included at `infrastructure/kubernetes/manifests.yaml`, covering the API, frontend, and supporting services with horizontal pod autoscaling.
 
 ```bash
 kubectl apply -f infrastructure/kubernetes/manifests.yaml
 kubectl get pods -n stratus
-kubectl logs -n stratus -l app=stratus-api
 ```
 
 </details>
 
 <details>
-<summary><strong>Terraform (AWS)</strong></summary>
+<summary><strong>Terraform / AWS (IaC included, not yet provisioned)</strong></summary>
+
+Terraform configuration at `infrastructure/terraform/main.tf` defines a VPC, RDS PostgreSQL, ElastiCache Redis, S3, an ECS cluster, and CloudWatch log groups for a production AWS deployment. Provisioning this creates billable AWS resources, so it has intentionally not been applied yet.
 
 ```bash
 cd infrastructure/terraform
 terraform init
 terraform plan -var="db_password=yourpassword"
-terraform apply
 ```
-
-Provisions a VPC, RDS PostgreSQL, ElastiCache Redis, S3, an ECS cluster, and CloudWatch log groups.
 
 </details>
 
