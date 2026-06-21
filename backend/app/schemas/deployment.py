@@ -33,7 +33,7 @@ class DeploymentResponse(BaseModel):
     deployment_url: str | None
     build_logs: str | None
     error_message: str | None
-    metadata: dict[str, Any] | None
+    deployment_metadata: dict[str, Any] | None = Field(None, serialization_alias="metadata")
     build_duration_seconds: int | None
     started_at: datetime | None
     finished_at: datetime | None

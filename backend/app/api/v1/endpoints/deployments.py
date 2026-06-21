@@ -9,6 +9,7 @@ from app.models.models import DeploymentStatus, User
 from app.schemas.deployment import DeploymentCreate, DeploymentListResponse, DeploymentResponse
 from app.services.deployment_service import DeploymentService
 from app.services.project_service import ProjectService
+from app.tasks.tasks import process_deployment
 
 router = APIRouter()
 
@@ -57,7 +58,9 @@ async def create_deployment(
 ):
     await get_project_or_404(project_id, current_user, db)
     service = DeploymentService(db)
-    return await service.create(project_id, current_user.id, deployment_in)
+    deployment = await service.create(project_id, current_user.id, deployment_in)
+    process_deployment.delay(str(deployment.id), str(project_id))
+    return deployment
 
 
 @router.get("/projects/{project_id}/deployments/stats")

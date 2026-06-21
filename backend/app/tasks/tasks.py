@@ -65,18 +65,42 @@ def cleanup_old_deployment_logs():
 
 @celery_app.task(bind=True, max_retries=5, default_retry_delay=30)
 def process_deployment(self, deployment_id: str, project_id: str):
-    """Simulate deployment processing."""
+    """Simulate deployment processing and persist the result to the database."""
+    import asyncio
     import random
     import time
+    import uuid
+
+    from app.db.session import AsyncSessionLocal
+    from app.models.models import DeploymentStatus
+    from app.services.deployment_service import DeploymentService
+
+    async def _run():
+        async with AsyncSessionLocal() as session:
+            service = DeploymentService(session)
+            deployment = await service.get_by_id(uuid.UUID(deployment_id), uuid.UUID(project_id))
+            if not deployment:
+                logger.error(f"Deployment {deployment_id} not found")
+                return
+            await service.update_status(deployment, DeploymentStatus.building)
+            await session.commit()
+
+            time.sleep(random.uniform(5, 15))  # simulate build
+            success = random.random() > 0.1  # 90% success rate
+
+            deployment = await service.get_by_id(uuid.UUID(deployment_id), uuid.UUID(project_id))
+            await service.update_status(
+                deployment,
+                DeploymentStatus.success if success else DeploymentStatus.failed,
+                deployment_url=f"https://{deployment_id[:8]}.stratus.app" if success else None,
+                error_message=None if success else "Build failed: simulated failure",
+            )
+            await session.commit()
 
     try:
         logger.info(f"Processing deployment {deployment_id}")
-        time.sleep(random.uniform(5, 15))  # simulate build
-        success = random.random() > 0.1  # 90% success rate
-        return {
-            "deployment_id": deployment_id,
-            "status": "success" if success else "failed",
-            "duration_seconds": random.randint(30, 300),
-        }
+        asyncio.run(_run())
+        return {"deployment_id": deployment_id, "status": "completed"}
     except Exception as exc:
+        logger.error(f"Failed to process deployment {deployment_id}: {exc}")
         raise self.retry(exc=exc) from exc
