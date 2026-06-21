@@ -68,34 +68,46 @@ def process_deployment(self, deployment_id: str, project_id: str):
     """Simulate deployment processing and persist the result to the database."""
     import asyncio
     import random
-    import time
     import uuid
 
-    from app.db.session import AsyncSessionLocal
     from app.models.models import DeploymentStatus
     from app.services.deployment_service import DeploymentService
 
     async def _run():
-        async with AsyncSessionLocal() as session:
-            service = DeploymentService(session)
-            deployment = await service.get_by_id(uuid.UUID(deployment_id), uuid.UUID(project_id))
-            if not deployment:
-                logger.error(f"Deployment {deployment_id} not found")
-                return
-            await service.update_status(deployment, DeploymentStatus.building)
-            await session.commit()
+        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-            time.sleep(random.uniform(5, 15))  # simulate build
-            success = random.random() > 0.1  # 90% success rate
+        from app.core.config import settings
 
-            deployment = await service.get_by_id(uuid.UUID(deployment_id), uuid.UUID(project_id))
-            await service.update_status(
-                deployment,
-                DeploymentStatus.success if success else DeploymentStatus.failed,
-                deployment_url=f"https://{deployment_id[:8]}.stratus.app" if success else None,
-                error_message=None if success else "Build failed: simulated failure",
-            )
-            await session.commit()
+        task_engine = create_async_engine(settings.DATABASE_URL, pool_size=1, max_overflow=0)
+        task_session_local = async_sessionmaker(task_engine, expire_on_commit=False)
+
+        try:
+            async with task_session_local() as session:
+                service = DeploymentService(session)
+                deployment = await service.get_by_id(
+                    uuid.UUID(deployment_id), uuid.UUID(project_id)
+                )
+                if not deployment:
+                    logger.error(f"Deployment {deployment_id} not found")
+                    return
+                await service.update_status(deployment, DeploymentStatus.building)
+                await session.commit()
+
+                await asyncio.sleep(random.uniform(5, 15))  # simulate build
+                success = random.random() > 0.1  # 90% success rate
+
+                deployment = await service.get_by_id(
+                    uuid.UUID(deployment_id), uuid.UUID(project_id)
+                )
+                await service.update_status(
+                    deployment,
+                    DeploymentStatus.success if success else DeploymentStatus.failed,
+                    deployment_url=f"https://{deployment_id[:8]}.stratus.app" if success else None,
+                    error_message=None if success else "Build failed: simulated failure",
+                )
+                await session.commit()
+        finally:
+            await task_engine.dispose()
 
     try:
         logger.info(f"Processing deployment {deployment_id}")
