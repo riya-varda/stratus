@@ -1,104 +1,96 @@
-﻿# Stratus
+<div align="center">
+
+# Stratus
+
+**A cloud infrastructure and deployment management platform**
+
+*Think Vercel meets Railway — manage projects, trigger deployments, and monitor your infrastructure from a single dashboard.*
 
 [![CI/CD](https://github.com/riya-varda/stratus/actions/workflows/ci.yml/badge.svg)](https://github.com/riya-varda/stratus/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 
-**Stratus** is a cloud infrastructure and deployment management platform - think Vercel meets Railway. Teams can manage projects, trigger deployments, and monitor their infrastructure from a single dashboard.
+</div>
 
 ---
+
+## Overview
+
+Stratus is a full-stack platform for managing cloud projects and deployments. It includes authentication with role-based access control, a deployment pipeline with environment-based triggers, background job processing, and a complete observability stack — all containerized and shipped through an automated CI/CD pipeline.
 
 ## Features
 
-- **JWT + API Key Authentication** - access tokens, refresh tokens, bcrypt-hashed passwords, role-based access control (admin / developer / viewer)
-- **Project Management** - create, search, filter, and paginate projects with slug-based routing
-- **Deployment Pipeline** - trigger deployments per environment (dev / staging / prod), view logs, cancel in-flight jobs
-- **Analytics Dashboard** - 14-day deployment trends, success rate, recent activity feed
-- **Background Tasks** - Celery + Redis for email notifications, cleanup jobs, async processing
-- **Caching** - Redis cache with graceful fallback when unavailable
-- **Observability** - `/health`, `/ready`, `/live` endpoints, Prometheus metrics, and Grafana dashboards with full service coverage (API, Postgres, Redis)
-- **Dark Mode** - first-class dark/light theme with Tailwind CSS
-- **Responsive UI** - sidebar nav, skeleton loaders, empty states, toast notifications, smooth Framer Motion animations
-
----
+| Category | Details |
+|---|---|
+| **Authentication** | JWT access + refresh tokens, bcrypt password hashing, API keys, RBAC (admin / developer / viewer) |
+| **Project Management** | Create, search, filter, and paginate projects with slug-based routing |
+| **Deployments** | Trigger deployments per environment (dev / staging / prod), view logs, cancel in-flight jobs |
+| **Analytics** | 14-day deployment trends, success rate tracking, recent activity feed |
+| **Background Jobs** | Celery + Redis for email notifications, cleanup tasks, async processing |
+| **Caching** | Redis cache with graceful fallback when unavailable |
+| **Observability** | Health/readiness/liveness probes, Prometheus metrics, Grafana dashboards with full service coverage |
+| **UI/UX** | Dark mode, responsive layout, skeleton loaders, toast notifications, Framer Motion animations |
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Backend** | FastAPI, SQLAlchemy 2.0 (async), Alembic, Pydantic v2 |
-| **Auth** | JWT (python-jose), bcrypt (passlib), API keys |
-| **Database** | PostgreSQL 16 |
-| **Cache / Queue** | Redis 7, Celery |
-| **Frontend** | React 18, TypeScript, Tailwind CSS, Framer Motion |
-| **State / Data** | Zustand, TanStack React Query, Recharts |
-| **Infrastructure** | Docker Compose, Kubernetes, Terraform (AWS) |
-| **CI/CD** | GitHub Actions - lint, type-check, test, migration validation, build, Docker publish |
-| **Monitoring** | Prometheus, Grafana, postgres_exporter, redis_exporter |
+<table>
+<tr>
+<td valign="top" width="50%">
 
----
+**Backend**
+- FastAPI (async)
+- SQLAlchemy 2.0
+- Alembic
+- Pydantic v2
+- PostgreSQL 16
+- Redis 7 + Celery
 
-## Project Structure
+</td>
+<td valign="top" width="50%">
 
-```
-stratus/
-â”œâ”€â”€ backend/
-â”‚   â”œâ”€â”€ app/
-â”‚   â”‚   â”œâ”€â”€ api/v1/endpoints/    # Route handlers
-â”‚   â”‚   â”œâ”€â”€ core/                # Config, security, dependencies
-â”‚   â”‚   â”œâ”€â”€ db/                  # Session, Redis cache
-â”‚   â”‚   â”œâ”€â”€ middleware/          # Logging
-â”‚   â”‚   â”œâ”€â”€ models/               # SQLAlchemy ORM models
-â”‚   â”‚   â”œâ”€â”€ schemas/              # Pydantic request/response schemas
-â”‚   â”‚   â”œâ”€â”€ services/             # Business logic layer
-â”‚   â”‚   â”œâ”€â”€ tasks/                # Celery tasks
-â”‚   â”‚   â””â”€â”€ main.py               # FastAPI application
-â”‚   â”œâ”€â”€ alembic/                  # Database migrations
-â”‚   â”œâ”€â”€ tests/                    # Pytest tests + Locust load tests
-â”‚   â”œâ”€â”€ Dockerfile
-â”‚   â””â”€â”€ requirements.txt
-â”œâ”€â”€ frontend/
-â”‚   â”œâ”€â”€ src/
-â”‚   â”‚   â”œâ”€â”€ components/           # Reusable UI components + layout
-â”‚   â”‚   â”œâ”€â”€ hooks/                # React Query hooks, toast
-â”‚   â”‚   â”œâ”€â”€ lib/                  # Axios client, utils
-â”‚   â”‚   â”œâ”€â”€ pages/                # Route pages (auth, dashboard, etc.)
-â”‚   â”‚   â”œâ”€â”€ store/                # Zustand stores (auth, UI)
-â”‚   â”‚   â”œâ”€â”€ types/                # TypeScript types
-â”‚   â”‚   â””â”€â”€ App.tsx               # Router + providers
-â”‚   â”œâ”€â”€ Dockerfile
-â”‚   â””â”€â”€ package.json
-â”œâ”€â”€ infrastructure/
-â”‚   â”œâ”€â”€ kubernetes/               # K8s manifests + HPA
-â”‚   â”œâ”€â”€ terraform/                # AWS (VPC, RDS, ElastiCache, S3, ECS)
-â”‚   â”œâ”€â”€ prometheus/               # Scrape config
-â”‚   â””â”€â”€ grafana/                  # Dashboards + datasources
-â”œâ”€â”€ .github/workflows/            # GitHub Actions CI/CD
-â”œâ”€â”€ docker-compose.yml
-â””â”€â”€ README.md
-```
+**Frontend**
+- React 18 + TypeScript
+- Tailwind CSS
+- Framer Motion
+- Zustand
+- TanStack React Query
+- Recharts
 
----
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**Infrastructure**
+- Docker Compose (verified, runs full stack)
+- Kubernetes manifests (included, not yet deployed)
+- Terraform / AWS (included, not yet provisioned)
+
+</td>
+<td valign="top">
+
+**CI/CD & Monitoring**
+- GitHub Actions (6-stage pipeline, fully green)
+- Prometheus + Grafana
+- postgres_exporter / redis_exporter
+
+</td>
+</tr>
+</table>
 
 ## Quick Start
 
-### Prerequisites
-- Docker & Docker Compose
-- Node 20+ (for local frontend dev)
-- Python 3.12+ (for local backend dev)
-
-### 1. Clone & configure
+**Prerequisites:** Docker & Docker Compose, Node 20+, Python 3.12+
 
 ```bash
 git clone https://github.com/riya-varda/stratus.git
 cd stratus
 
 cp backend/.env.example backend/.env
-# Edit backend/.env - set SECRET_KEY at minimum
-```
+# Edit backend/.env — set SECRET_KEY at minimum
 
-### 2. Start with Docker Compose
-
-```bash
 docker compose up -d
 ```
 
@@ -110,55 +102,43 @@ docker compose up -d
 | Grafana | http://localhost:3001 (admin/admin) |
 | Prometheus | http://localhost:9090 |
 
-### 3. Create your first account
+Then open http://localhost:3000/register to create your first account.
 
-Open http://localhost:3000/register and sign up.
+<details>
+<summary><strong>Local development (without Docker)</strong></summary>
 
----
-
-## Local Development
-
-### Backend
-
+**Backend**
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Start PostgreSQL and Redis (Docker)
 docker compose up postgres redis -d
-
-# Copy env
 cp .env.example .env
-
-# Run migrations
 alembic upgrade head
 
-# Start API
 uvicorn app.main:app --reload
-
-# Start Celery worker (separate terminal)
-celery -A app.tasks.celery_app worker --loglevel=info
+celery -A app.tasks.celery_app worker --loglevel=info   # separate terminal
 ```
 
-### Frontend
-
+**Frontend**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
----
+</details>
 
-## Testing
+<details>
+<summary><strong>Running tests</strong></summary>
 
 ```bash
-# Backend unit + integration tests
+# Backend
 cd backend
 pytest tests/ -v --cov=app
 
-# Load test with Locust
+# Load testing
 locust -f tests/locustfile.py --host=http://localhost:8000
 
 # Frontend type check
@@ -166,110 +146,96 @@ cd frontend
 npm run type-check
 ```
 
----
+</details>
 
 ## API Overview
 
-All endpoints are prefixed with `/api/v1`.
+All endpoints are prefixed with `/api/v1`. Full interactive docs available at `/docs`.
 
-| Method | Path | Description |
+| Method | Endpoint | Description |
 |---|---|---|
-| POST | `/auth/register` | Create account |
-| POST | `/auth/login` | Login (returns JWT) |
-| POST | `/auth/refresh` | Refresh access token |
-| GET | `/auth/me` | Get current user |
-| GET | `/projects/` | List projects (paginated) |
-| POST | `/projects/` | Create project |
-| PATCH | `/projects/{id}` | Update project |
-| DELETE | `/projects/{id}` | Delete project |
-| GET | `/projects/{id}/deployments` | List deployments |
-| POST | `/projects/{id}/deployments` | Trigger deployment |
-| POST | `/projects/{id}/deployments/{did}/cancel` | Cancel deployment |
-| GET | `/analytics/overview` | Dashboard analytics |
-| GET | `/health` | Health check |
-| GET | `/ready` | Readiness probe |
-| GET | `/live` | Liveness probe |
-| GET | `/metrics` | Prometheus metrics |
+| `POST` | `/auth/register` | Create account |
+| `POST` | `/auth/login` | Login, returns JWT |
+| `POST` | `/auth/refresh` | Refresh access token |
+| `GET` | `/auth/me` | Current user |
+| `GET` | `/projects/` | List projects (paginated) |
+| `POST` | `/projects/` | Create project |
+| `PATCH` | `/projects/{id}` | Update project |
+| `DELETE` | `/projects/{id}` | Delete project |
+| `GET` | `/projects/{id}/deployments` | List deployments |
+| `POST` | `/projects/{id}/deployments` | Trigger deployment |
+| `POST` | `/projects/{id}/deployments/{did}/cancel` | Cancel deployment |
+| `GET` | `/analytics/overview` | Dashboard analytics |
+| `GET` | `/health` `/ready` `/live` | Health probes |
+| `GET` | `/metrics` | Prometheus metrics |
 
-**Authentication:** Pass `Authorization: Bearer <token>` or `Authorization: Bearer sk_<api_key>`.
+Authenticate with `Authorization: Bearer <jwt>` or `Authorization: Bearer sk_<api_key>`.
 
----
+## CI/CD Pipeline
 
-## Docker
+Every push to `main` runs a 6-stage GitHub Actions workflow:
+
+1. **Backend Lint & Type Check** — Ruff, Black, MyPy
+2. **Backend Tests** — pytest against real PostgreSQL + Redis service containers
+3. **Validate Migrations** — confirms Alembic migrations match current models
+4. **Frontend Lint & Type Check** — TypeScript strict mode
+5. **Frontend Build** — production Vite build
+6. **Build & Push Docker Images** — publishes to Docker Hub on merge to `main`
+
+## Deployment
+
+The application runs locally via Docker Compose (see Quick Start above). Infrastructure-as-code for cloud deployment is included in the repo but has not yet been provisioned against a live cloud environment:
+
+<details>
+<summary><strong>Docker (verified)</strong></summary>
 
 ```bash
-# Development (hot reload)
-docker compose up
-
-# Production build
-docker compose -f docker-compose.yml build
-
-# Backend only
-docker build -t stratus-api --target production ./backend
-
-# Frontend only
-docker build -t stratus-frontend --target production ./frontend
+docker compose up                                                # dev, hot reload
+docker build -t stratus-api --target production ./backend        # backend only
+docker build -t stratus-frontend --target production ./frontend  # frontend only
 ```
 
----
+</details>
 
-## Kubernetes
+<details>
+<summary><strong>Kubernetes (manifests included, not yet deployed)</strong></summary>
+
+Manifests for a Kubernetes deployment are included at `infrastructure/kubernetes/manifests.yaml`, covering the API, frontend, and supporting services with horizontal pod autoscaling.
 
 ```bash
 kubectl apply -f infrastructure/kubernetes/manifests.yaml
 kubectl get pods -n stratus
-kubectl logs -n stratus -l app=stratus-api
 ```
 
----
+</details>
 
-## Terraform (AWS)
+<details>
+<summary><strong>Terraform / AWS (IaC included, not yet provisioned)</strong></summary>
+
+Terraform configuration at `infrastructure/terraform/main.tf` defines a VPC, RDS PostgreSQL, ElastiCache Redis, S3, an ECS cluster, and CloudWatch log groups for a production AWS deployment. Provisioning this creates billable AWS resources, so it has intentionally not been applied yet.
 
 ```bash
 cd infrastructure/terraform
 terraform init
 terraform plan -var="db_password=yourpassword"
-terraform apply
 ```
 
-Provisions: VPC with private/public subnets, RDS PostgreSQL, ElastiCache Redis, S3, ECS cluster, CloudWatch log groups.
-
----
+</details>
 
 ## Monitoring
 
-- **Prometheus** scrapes the API's `/metrics` endpoint every 15s, along with dedicated `postgres_exporter` and `redis_exporter` containers for database and cache metrics
-- **Grafana** dashboards at http://localhost:3001 (admin/admin), connected to Prometheus as a data source
-- **Structured logs** in JSON format via Python's logging module
-
----
-
-## CI/CD
-
-Every push to `main` runs a 6-stage GitHub Actions pipeline:
-
-1. **Backend Lint & Type Check** - Ruff, Black, MyPy
-2. **Backend Tests** - pytest against real PostgreSQL + Redis service containers
-3. **Validate Migrations** - confirms Alembic migrations match the current models
-4. **Frontend Lint & Type Check** - TypeScript strict mode
-5. **Frontend Build** - production Vite build
-6. **Build & Push Docker Images** - publishes versioned images to Docker Hub on successful merge to `main`
-
----
+Prometheus scrapes the API's `/metrics` endpoint every 15s, alongside dedicated `postgres_exporter` and `redis_exporter` containers for database and cache metrics. Grafana dashboards are available at `localhost:3001`, pre-connected to Prometheus as a data source. All application logs are structured JSON via Python's logging module.
 
 ## Contributing
 
-This started as a personal learning project to get hands-on with production backend patterns - async APIs, background job queues, observability, and CI/CD. Issues and pull requests are welcome if you'd like to extend it.
+This started as a hands-on project to work with production backend patterns — async APIs, background job queues, observability, and CI/CD. Issues and pull requests are welcome.
 
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Make your changes and ensure `ruff check .`, `black --check .`, `mypy app/`, and `pytest` all pass
-4. Open a pull request
-
----
+```bash
+git checkout -b feature/your-feature
+# make your changes
+ruff check . && black --check . && mypy app/ && pytest   # must all pass
+```
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-
-
+[MIT](LICENSE)
