@@ -83,13 +83,13 @@ def process_deployment(self, deployment_id: str, project_id: str):
         },
         "fastapi": {
             "image": "python:3.12-slim",
-            "fixture": "build_fixtures/fastapi",
-            "command": "sh -c 'pip install -r requirements.txt -q && echo Build complete!'",
+            "fixture": None,
+            "command": "sh -c 'pip install fastapi uvicorn sqlalchemy -q && echo Build complete!'",
         },
         "flask": {
             "image": "python:3.12-slim",
-            "fixture": "build_fixtures/flask",
-            "command": "sh -c 'pip install -r requirements.txt -q && echo Build complete!'",
+            "fixture": None,
+            "command": "sh -c 'pip install flask requests -q && echo Build complete!'",
         },
     }
 
@@ -138,15 +138,12 @@ def process_deployment(self, deployment_id: str, project_id: str):
     try:
         logger.info(f"Processing deployment {deployment_id}")
 
-        # Mark as building
         asyncio.run(_update_db(DeploymentStatus.building))
 
-        # Get framework and build config
         framework = asyncio.run(_get_framework())
         build_config = framework_build.get(framework or "", default_build)
         logger.info(f"Building with framework={framework}, image={build_config['image']}")
 
-        # Run the real Docker build
         docker_client = docker.from_env()
         build_logs = []
         success = False
