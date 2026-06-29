@@ -1,0 +1,7 @@
+{
+  "name": "sample-nextjs-app",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo Building Next.js app && echo Build complete"
+  }
+}
