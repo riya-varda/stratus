@@ -70,7 +70,7 @@ def process_deployment(self, deployment_id: str, project_id: str):
     from app.models.models import DeploymentStatus, Project
     from app.services.deployment_service import DeploymentService
 
-    framework_build = {
+    framework_build: dict[str, dict[str, str | None]] = {
         "react": {
             "image": "node:20-alpine",
             "fixture": "build_fixtures/react",
